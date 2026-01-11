@@ -1,0 +1,369 @@
+meta:
+  engine: 4.1.0
+  name: "nopanpad v1"
+  version: "first one lol"
+  date: "27/12/2025"
+  author: "nopan!"
+  url: &url github.com/nopanfakemix/nopanpad
+units:
+  #unify values so i dont use the wrong one (u=/=U normally)
+  U: 19.05
+  u: U
+  #key padding
+  pd: u+1
+  
+points:
+  zones:
+    matrix:
+      anchor.shift: [200, -200]
+      key:
+        padding: u
+        spread: u
+      columns:
+        col1:
+          key.column_net: col1
+          rows:
+            row1:
+              width: 2u-1
+              shift: [0.5u,0]
+            row2:
+              shift: [-0.5u,0]
+            row3:
+            row4:
+            row5:
+        col2:
+          key.column_net: col2
+          rows:
+            row1.skip: true
+            row2:
+            row3:
+            row4:
+            row5:
+        col3:
+          key.column_net: col3
+          rows:
+            row1:
+            row2:
+            row3:
+            row4:
+            row5:
+        col4:
+          key.column_net: col4
+          rows:
+            row1:
+              height: 2u-1
+              shift: [0,0.5u]
+            row2.skip: true
+            row3:
+              shift: [0,-0.5u]
+            row4:
+            row5:
+      rows:
+        row1:
+          row_net: row1
+          tags: key
+        row2:
+          row_net: row2
+          tags: key
+        row3:
+          row_net: row3
+          tags: key
+        row4:
+          row_net: row4
+          tags: key
+        row5:
+          row_net: row5
+          tags: key
+outlines:
+  cover_hole:
+    - what: rectangle
+      where: key
+      size: u
+    - what: rectangle
+      where: 
+        ref: matrix_col1_row1
+      size: [2u,u]
+    - what: rectangle
+      where: 
+        ref: matrix_col1_row1
+      size: [2u,u]
+    - what: rectangle
+      where:
+        ref: matrix_col2_row5
+        shift: [0.5u,24]
+      size: [4u-2,26]
+
+      operation: add
+    - what: rectangle
+      where:
+        ref: matrix_col4_row1
+      size: [u,2u]
+      operation: add
+  plate_hole:
+    - what: rectangle
+      where: key
+      size: 14
+  keycaps:
+    - what: rectangle
+      where: key
+      size: 18
+  board:
+    - what: polygon
+      operation: stack
+      points:
+        #top left
+        - ref: matrix_col1_row5
+          shift: [-0.5pd-2, 0.5pd+2+30]
+        #top right
+        - ref: matrix_col4_row5
+          shift: [0.5pd+2, 0.5pd+2+30]
+        #bottom right
+        - ref: matrix_col3_row1
+          shift: [1.5pd+2, -0.5pd-2]
+        #bottom left
+        - ref: matrix_col1_row1
+          shift: [-1pd-2, -0.5pd-2]
+  inner:
+    - what: polygon
+      operation: stack
+      points:
+        #top left
+        - ref: matrix_col1_row5
+          shift: [-0.5pd-1, 0.5pd+1+30]
+        #top right
+        - ref: matrix_col4_row5
+          shift: [0.5pd+1, 0.5pd+1+30]
+        #bottom right
+        - ref: matrix_col3_row1
+          shift: [1.5pd+1, -0.5pd-1]
+        #bottom left
+        - ref: matrix_col1_row1
+          shift: [-1pd-1, -0.5pd-1]
+  key_plate:
+    - what: outline
+      name: board
+    - what: outline
+      name: plate_hole
+      operation: subtract
+    - what: rectangle
+      where:
+        ref: matrix_col2_row5
+        shift: [0.5u,24]
+      size: [4u,28]
+      bevel: 2
+      operation: subtract
+  combo:
+    - what: outline
+      name: key_plate
+    - what: outline
+      name: cover_hole
+      operation: stack
+    - what: outline
+      name: keycaps
+      operation: stack
+    - what: outline
+      name: plate_hole
+      operation: stack
+  outer:
+    - what: outline
+      name: board
+      expand: 5 #3mm good for plastic, try _5_ for corrugate?
+  cutter:
+    - what: rectangle
+      size: 200
+      where: matrix_col2_row2
+pcbs:
+  nopanpad:
+    template: kicad8
+    outlines:
+      board:
+        outline: board
+    footprints:
+      mcu:
+        what: ceoloide/mcu_nice_nano
+        where:
+          ref: matrix_col2_row5
+          shift: [-13,25]
+          rotate: 90
+      mx:
+        what: ceoloide/switch_mx
+        where: key
+        params:
+          from: "{{column_net}}"
+          to: "{{colrow}}"
+      diode:
+        what: ceoloide/diode_tht_sod123
+        where: key
+        params:
+          from: "{{colrow}}"
+          to: "{{row_net}}"
+        adjust:
+          shift: [-2,-4]
+          rotate: 0
+      batt:
+        what: ceoloide/battery_connector_jst_ph_2
+        where:
+          ref: matrix_col3_row5
+          shift: [-10,36]
+          rotate: 90
+cases:
+  top:
+    - what: outline
+      name: outer
+      extrude: 5
+    - what: outline
+      name: cover_hole
+      operation: subtract
+      extrude: 5
+    - what: outline
+      name: board
+      operation: subtract
+      extrude: 3
+  top_layered:
+    - what: outline
+      name: outer
+      extrude: 2
+    - what: outline
+      name: outer
+      extrude: 2
+      shift: [0,0,3]
+    - what: outline
+      name: outer
+      extrude: 2
+      shift: [0,0,6]
+    - what: outline
+      name: cover_hole
+      operation: subtract
+      extrude: 8
+    - what: outline
+      name: board
+      operation: subtract
+      extrude: 5
+  plate:
+    - what: outline
+      name: key_plate
+      extrude: 1
+  ass:
+      #bottom shell
+    - what: outline
+      name: outer
+      extrude: 30
+      shift: [0,0,-55]
+
+      #hollow inside of bottom shell
+    - what: outline
+      name: inner
+      extrude: 14
+      shift: [0,0,-39]
+      operation: subtract
+
+      #small lip inside bottom of case for plate
+    - what: outline
+      name: board
+      extrude: 2
+      shift: [0,0,-27]
+      operation: subtract
+
+      #sloped bottom face
+    - what: outline
+      name: cutter
+      extrude: 20
+      shift: [0,20,-68]
+      rotate: [-5,0,0]
+      operation: subtract
+  ass_one:
+    - what: outline
+      name: outer
+      extrude: 2
+    - what: outline
+      name: board
+      extrude: 2
+      operation: subtract
+  ass_two:
+    - what: outline
+      name: outer
+      extrude: 2
+    - what: outline
+      name: inner
+      extrude: 2
+      operation: subtract
+  master_class_in_blasting_ass:
+    - what: outline
+      name: outer
+      extrude: 2
+  ass_layered:
+    # 14mm hollow section
+    - what: case  #0
+      name: ass_one
+    - what: case #1
+      name: ass_two
+      shift: [0,0,-3]
+    - what: case #2
+      name: ass_two
+      shift: [0,0,-6]
+    - what: case #3
+      name: ass_two
+      shift: [0,0,-9]
+    - what: case #4
+      name: ass_two
+      shift: [0,0,-12]
+    - what: case #5
+      name: ass_two
+      shift: [0,0,-15]
+    - what: case #6
+      name: ass_two
+      shift: [0,0,-18]
+    # 16mm sloped bottom fuckass fuckyou whatever
+    # im sorry for that comment im just kinda on edge
+    # probable gonna form the slope elsewhere maybe
+    - what: case #0
+      name: master_class_in_blasting_ass
+      shift: [0,0,-21]
+    - what: case #1
+      name: master_class_in_blasting_ass
+      shift: [0,0,-24]
+    - what: case #2
+      name: master_class_in_blasting_ass
+      shift: [0,0,-27]
+    - what: case #3
+      name: master_class_in_blasting_ass
+      shift: [0,0,-30]
+    - what: case #4
+      name: master_class_in_blasting_ass
+      shift: [0,0,-33]
+    - what: case #5
+      name: master_class_in_blasting_ass
+      shift: [0,0,-36]
+    - what: case #6
+      name: master_class_in_blasting_ass
+      shift: [0,0,-39]
+    - what: case #7
+      name: master_class_in_blasting_ass
+      shift: [0,0,-42]
+      
+  assembly:
+    - what: case
+      name: top
+    - what: case
+      name: plate
+    - what: case
+      name: ass
+  xsection:
+    - what: case
+      name: assembly
+      #Cross-section-inator
+    - what: outline
+      name: cutter
+      extrude: 500
+      shift: [15,10,0]
+      rotate: [0,90,0]
+      operation: subtract
+  layered_assy:
+    - what: case
+      name: top_layered
+    - what: case
+      name: plate
+      shift: [0,0,-3]
+    - what: case
+      name: ass_layered
+      shift: [0,0,-6]
