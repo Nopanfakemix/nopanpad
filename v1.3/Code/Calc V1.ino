@@ -7,8 +7,8 @@ no idea how I switch from numpad mode to standalone calculator mode!
 #include <SPI.h>
 
 //keypad
-const uint8_t ROWS = 4;
-const uint8_t COLS = 4;
+const byte ROWS = 4;
+const byte COLS = 4;
 
 char numkeys[ROWS][COLS] = {
 {'7', '8', '9', '-'},
@@ -17,10 +17,10 @@ char numkeys[ROWS][COLS] = {
 {'D', '0', '.', '='},
 };
 
-uint8_t colPins[COLS] = {4, 5, 6, 7};
-uint8_t rowPins[ROWS] = {0, 1, 2, 3}; //pin numbers on the SOM I's using
+byte colPins[COLS] = {6, 7, 8, 9};
+byte rowPins[ROWS] = {2, 3, 4, 5}; //pin numbers on the SOM I's using
 
-Keypad keypad = Keypad(makeKeymap(numkeys), rowPins, colPins, ROWS, COLS);
+Keypad kpd = Keypad(makeKeymap(numkeys), rowPins, colPins, ROWS, COLS);
 /*
 //how tf do I setup SPI i never done this before
 // 2.9" Display, B/W, 128*296
@@ -36,8 +36,8 @@ float E2;  //second expression
 float E3;  //result
 float EX;  //swap area
 char key, oper;
-byte Ct=0; //character count
-byte Dt=0; //after decimal count
+uint8_t Ct=0; //character count
+uint8_t Dt=0; //after decimal count
 
 String SEX0 = String(""); //string of above expressions 4 print to display
 String SEX1 = String(""); //string expression
@@ -52,23 +52,24 @@ void setup(){
 }
 
 void loop(){
-  key = keypad.getKey(); //this stores the pressed key in a char value according to built makeKeymap
+  key = kpd.getKey(); //this stores the pressed key in a char value according to built makeKeymap
 
-  if (key != NO_KEY){Serial1.println("keydetect"); DoMath();}          //do the thing called DoMath
+  if (key != NO_KEY){DoMath();}          //do the thing called DoMath
   
   delay(10);
 }
 
 void DoMath(){              //okay here we go this is where i try to write code to make
   if (key=='1'||key=='2'||key=='3'||key=='4'||key=='5'||key=='6'||key=='7'||key=='8'||key=='9'||key=='0'||key=='.'){   //if any number or decimal
-    if ((Ct==0)&&(key=='0')){Ct=0;} else {    //if
+    if ((Ct==0)&&(key=='0')&&(Dt==0)){Ct=0;} else {    //if
       if(key=='.'){if(Dt==0){SEX0= SEX0 + String(key);Dt++;}}  //if '.', then if Dt=0, add '.' as string to SEX1
-      else{ SEX0= SEX0 + String(key);if (Dt>0){Dt++;} else {Ct++;}    //this will probably misbehave if you hit 0 multiple times.
-      Serial1.println(SEX1);
+      else{ SEX0= SEX0 + String(key);if (Dt>0){Dt++;} else {Ct++;}}    //this will probably misbehave if you hit 0 multiple times.
+      Serial1.print(key);
+      //Serial1.print(Ct);Serial1.print(Dt);Serial1.print("key:");Serial1.print(key);Serial1.println(" Ex:" + SEX0);
       //yoink.PuttaCursor(FarRight-Ct-Dt) \\start FarRight, move left as many times as are strings in result
       //yoink.print(SEX1)
       EX = SEX0.toFloat();
-      }
+      
     }
   }
   if (key=='D'){
@@ -95,16 +96,22 @@ void DoMath(){              //okay here we go this is where i try to write code 
 }
 
 void Calculate(){  // okay by here we should have SEX0 as a string containing whatever buttons we pushed and the desired operator
-if (E1==0){E1=EX;SEX1=SEX0;} //if first time, move the expressions around so we can get the second expression
-else      {E2=EX;SEX2=SEX0;
-  if (oper =='*') {E3=E1*E2;}
-  if (oper =='/') {E3=E1/E2;}
-  if (oper =='-') {E3=E1-E2;}
-  if (oper =='+') {E3=E1+E2;}
-  }
+if (SEX1==""){E1=EX;SEX1=SEX0;} //if first time, move the expressions around so we can get the second expression
+else      {E2=EX;SEX2=SEX0;}
+  if (oper =='*') {E1=E1*E2;}
+  if (oper =='/') {E1=E1/E2;}
+  if (oper =='-') {E1=E1-E2;}
+  if (oper =='+') {E1=E1+E2;}
+  
 if ((E1!=0)&&(key=='=')){
-  Serial1.println(E3);
+  Serial1.println(E1);
+  Serial1.print(E1);Serial1.print(oper);Serial1.print(E2);
 }
+SEX0 = String("");
+SEX1 = String("");
+Ct=0;
+Dt=0;
+E1,E2,EX=0;
 }
 
 //void DisplayResult(){
