@@ -37,11 +37,11 @@ float E2;  //second expression
 float E3;  //result
 float EX;  //swap area
 char key, oper;
-uint8_t Ct=0; //character count
+uint8_t Ct=1; //character count. Starts at 1 cuz 0 is default displayed character
 uint8_t Dt=0; //after decimal count
 bool  calc=false;
 
-String SEX0 = String(""); //string of above expressions 4 print to display
+String SEX0 = String("0"); //string of above expressions 4 print to display
 String SEX1 = String(""); //string expression
 String SEX2 = String(""); //haha funneeeeeeee
 String SEX3 = String("");
@@ -58,36 +58,46 @@ void setup(){
 
 void loop(){
   key = kpd.getKey(); //this stores the pressed key in a char value according to built makeKeymap
-
+  lcd.setCursor(0,0);lcd.print("0:"+SEX0+" E:"+EX);
+  lcd.setCursor(0,1);lcd.print("1:"+SEX1+" E:"+E1);
+  lcd.setCursor(0,2);lcd.print("2:"+SEX2+" E:"+E2);
+  lcd.setCursor(0,3);lcd.print("3:"+SEX3+" E:"+E3);
+  lcd.setCursor(12,2);lcd.print("K:"+String(key));
+  lcd.setCursor(10,3);lcd.print("C:");lcd.print(Ct);lcd.print(" D:");lcd.print(Dt);
   if (key != NO_KEY){DoMath();}          //do the thing called DoMath
-  
+  lcd.setCursor(18-Ct-Dt,0);
+  lcd.print(SEX0);
   delay(10);
 }
 
 void DoMath(){              //okay here we go this is where i try to write code to make
   if (key=='1'||key=='2'||key=='3'||key=='4'||key=='5'||key=='6'||key=='7'||key=='8'||key=='9'||key=='0'||key=='.'){  //if any number or decimal
-    if (calc){SEX0=String("");SEX1=String("");}
-    if ((Ct==0)&&(key=='0')&&(Dt==0)){Ct=0;} else {    //if
+    if ((SEX0=="0")&&(key!='.')) if (key!='0'){SEX0=String(key);} else {Ct=1;} else {    //if
       if(key=='.'){if(Dt==0){SEX0= SEX0 + String(key);Dt++;}}  //if '.', then if Dt=0, add '.' as string to SEX1
       else{ SEX0= SEX0 + String(key);if (Dt>0){Dt++;} else {Ct++;}}    //this will probably misbehave if you hit 0 multiple times.
-      lcd.setCursor(20,0);lcd.print("          ");
+      lcd.setCursor(20,0);lcd.print("          ");//this sucks find a better way!!
       lcd.setCursor(18-Ct-Dt,0);
       lcd.print(SEX0);
       //Serial1.print(Ct);Serial1.print(Dt);Serial1.print("key:");Serial1.print(key);Serial1.println(" Ex:" + SEX0);
       //yoink.PuttaCursor(FarRight-Ct-Dt) \\start FarRight, move left as many times as are strings in result
       //yoink.print(SEX1)
-      EX = SEX0.toFloat();
-      
+      //EX = SEX0.toFloat();
     }
+  EX = SEX0.toFloat();
   }
+
   if (key=='D'){
     EX = 0;
     E1 = 0;
     E2 = 0;
     E3 = 0;
-    SEX0 = String("");
-    Ct=0;
+    SEX0 = String("0");
+    SEX1 = String("");
+    SEX2 = String("");
+    SEX3 = String("");
+    Ct=1;
     Dt=0;
+    calc=false;
     lcd.setCursor(0,0);
     String killmess = "KILLEMALLKILLEMALLKILLEMALLKILLEMALLKILLEMALLKILLEMALL";
     for (byte i = 0; i < killmess.length(); i++) {
@@ -100,29 +110,26 @@ void DoMath(){              //okay here we go this is where i try to write code 
     if (key=='/'){oper='/';}
     if (key=='-'){oper='-';}
     if (key=='+'){oper='+';}
-    Ct=0;Dt=0;
-    lcd.setCursor(18,2);lcd.print(key);
+    Ct=1;Dt=0;
+    lcd.clear();
+    lcd.setCursor(12,1);lcd.print(oper);
     Calculate();
   }
 
 }
 
 void Calculate(){  // okay by here we should have SEX0 as a string containing whatever buttons we pushed and the desired operator
-if (SEX1==""){E1=EX;SEX1=SEX0;SEX0=String("");} //if first time, move the expressions around so we can get the second expression
-else      {E2=EX;SEX2=SEX0;SEX0=String("");
+if (!calc){E1=E2=EX;SEX1=SEX0;SEX0=String("0");} //if first time, move the expressions around so we can get the second expression
+else {E2=EX;SEX2=SEX0;SEX0=String("0");
   if (oper =='*') {E1=E1*E2;}
   if (oper =='/') {E1=E1/E2;}
   if (oper =='-') {E1=E1-E2;}
   if (oper =='+') {E1=E1+E2;}
   SEX3=String(E1);}
 if ((E1!=0)&&(key=='=')){
-  Ct=0;
-  Dt=0;
-  calc=true;}
-lcd.setCursor(0,0);lcd.print(SEX0);
-lcd.setCursor(0,1);lcd.print(SEX1);
-lcd.setCursor(0,2);lcd.print(SEX2);
-lcd.setCursor(0,3);lcd.print(SEX3);
+  Ct=1;
+  Dt=0;}
+calc=true;
 }
 
 //void DisplayResult(){
